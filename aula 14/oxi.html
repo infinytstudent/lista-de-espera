@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imagens de Gatos Interativas</title>
+    <style>
+body {
+      font-family: Arial, sans-serif;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin:   
+ 0;}
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <button style="background-color: red;"><a href="https://www.youtube.com/watch?v=xvFZjo5PgG0">???</a></button>
+    <canvas id="particleCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const numParticles = 200;
+        const maxFollowParticles = 40;
+        const particles = [];
+        const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+
+        // Carrega a imagem de gato
+        const catImage = new Image();
+        catImage.src = 'https://veterinario.pt/wp-content/uploads/2015/09/cat-pet-animal-domestic-gato800.jpg'; // Altere para o caminho da imagem de gato
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 30 + 20; // Ajuste o tamanho da imagem
+                this.speedX = Math.random() * 3 - 1.5;
+                this.speedY = Math.random() * 3 - 1.5;
+                this.originX = x;
+                this.originY = y;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                // Verifica se a partícula atingiu a borda do canvas e faz a reflexão
+                if (this.x < 0 || this.x > canvas.width) {
+                    this.speedX = -this.speedX;
+                    this.x = Math.max(0, Math.min(this.x, canvas.width));
+                }
+
+                if (this.y < 0 || this.y > canvas.height) {
+                    this.speedY = -this.speedY;
+                    this.y = Math.max(0, Math.min(this.y, canvas.height));
+                }
+
+                // Atraí as partículas para o mouse, se estiver dentro do limite
+                
+        }
+
+
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        // Inicia a animação após a imagem de gato ser carregada
+        catImage.onload = () => {
+            createParticles();
+            animate();
+        };
+    </script>
+</body>
+</html>
+

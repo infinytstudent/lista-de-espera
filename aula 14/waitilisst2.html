@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Espera</title>
+  <style>
+body {
+      font-family: Arial, sans-serif;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin:   
+ 0;
+    }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;  
+ /* Centraliza o conteúdo dentro do container */
+    }
+
+
+  </style>
+</head>
+<body>
+
+
+  
+  
+
+
+  <canvas id="particleCanvas"></canvas>
+  <div class="container">
+    <h1>Inscreva-se na Lista de Espera</h1>
+    <div id="message" class="message" style="display: none;"></div>
+    <form id="waitlistForm">
+      <div class="form-group">
+        <label for="name">Nome:</label>
+        <input type="text" id="name" name="name" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <button type="submit">Inscrever-se</button>
+      </div>
+    </form>
+    <button id="seeListButton">Ver Lista de Inscritos</button>
+    <ul id="subscribers"></ul>
+  </div>
+
+  <script>
+    const subscribers = [];
+
+    document.getElementById('waitlistForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const messageDiv = document.getElementById('message');
+
+      subscribers.push({ name, email });
+
+      messageDiv.style.display = 'block';
+      messageDiv.textContent = `Obrigado, ${name}! Você foi adicionado à lista de espera.`;
+
+      document.getElementById('waitlistForm').reset();
+    });
+
+    document.getElementById('seeListButton').addEventListener('click', function() {
+      const subscriberList = document.getElementById('subscribers');
+      subscriberList.innerHTML = '';
+
+      if (subscribers.length === 0) {
+        subscriberList.innerHTML = '<li>Nenhum inscrito ainda.</li>';
+      } else {
+        subscribers.forEach(subscriber => {
+          const listItem = document.createElement('li');
+          listItem.textContent = `${subscriber.name} - ${subscriber.email}`;
+          subscriberList.appendChild(listItem);
+        });
+      }
+    });
+
+    const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const numParticles = 300; // Número reduzido de partículas
+        const maxFollowParticles = 25; // Máximo de partículas que seguem o mouse
+        const minDistance = 40; // Distância mínima entre partículas
+        const particles = [];
+        const mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = 2;
+                this.speedX = Math.random() * 3 - 1.5;
+                this.speedY = Math.random() * 3 - 1.5;
+                this.originX = x;
+                this.originY = y;
+                this.isFollowing = false; // Nova propriedade para verificar se a partícula está seguindo o mouse
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x < 0 || this.x > canvas.width) {
+                    this.speedX = -this.speedX;
+                    this.x = Math.max(0, Math.min(this.x, canvas.width));
+                }
+
+                if (this.y < 0 || this.y > canvas.height) {
+                    this.speedY = -this.speedY;
+                    this.y = Math.max(0, Math.min(this.y, canvas.height));
+                }
+
+                const dx = mouse.x - this.x;
+                const dy = mouse.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 200) { // Aumenta a distância de atração para 200 pixels
+                    if (this.isFollowing) {
+                        this.x += dx * 0.05; // Ajuste a força de atração
+                        this.y += dy * 0.05; // Ajuste a força de atração
+                    }
+                } else {
+                    this.isFollowing = false;
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        function isTooClose(particle, particles) {
+            return particles.some(other => {
+                const dx = particle.x - other.x;
+                const dy = particle.y - other.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < minDistance;
+            });
+        }
+
+        function createParticles() {
+            for (let i = 0; i < numParticles; i++) {
+                let xPos, yPos, validPosition = false;
+
+                while (!validPosition) {
+                    xPos = Math.random() * canvas.width;
+                    yPos = Math.random() * canvas.height;
+                    validPosition = !isTooClose({ x: xPos, y: yPos }, particles);
+                }
+
+                particles.push(new Particle(xPos, yPos));
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Cria uma lista das partículas que estão próximas ao mouse e devem seguir
+            const followingParticles = particles.filter(particle => {
+                const dx = mouse.x - particle.x;
+                const dy = mouse.y - particle.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                return distance < 200;
+            }).slice(0, maxFollowParticles);
+
+            particles.forEach(particle => {
+                particle.isFollowing = followingParticles.includes(particle); // Define se a partícula está seguindo o mouse
+                particle.update();
+                particle.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            mouse.x = e.x;
+            mouse.y = e.y;
+        });
+
+        createParticles();
+        animate();
+
+  </script>
+</body>
+</html>
+
